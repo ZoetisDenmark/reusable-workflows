@@ -16,3 +16,6 @@ jobs:
           ssh-private-key: ${{ secrets.SSH_KEY }}
       - run: ./dependencies.sh
       - run: ./run_tests.sh 
+      - uses: pavi2410/html-preview-action@v2
+        with:
+          html_file: 'reports/requirements_list.txt'
