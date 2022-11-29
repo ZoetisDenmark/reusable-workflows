@@ -7,4 +7,7 @@ jobs:
   triage:
     runs-on: vetscan-docker
     steps:
+      - uses: webfactory/ssh-agent@v0.5.4
+        with:
+          ssh-private-key: ${{ secrets.SSH_KEY }}
       - run: python3 -m pip install -r requirements.txt
