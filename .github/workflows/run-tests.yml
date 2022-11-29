@@ -1,0 +1,10 @@
+name: Reusable workflow example
+
+on:
+  workflow_call:
+
+jobs:
+  triage:
+    runs-on: vetscan-docker
+    steps:
+      - run: echo "lol"
