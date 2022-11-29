@@ -1,4 +1,4 @@
-name: Reusable workflow example
+name: Running common test
 
 on:
   workflow_call:
