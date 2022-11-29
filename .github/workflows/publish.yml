@@ -12,7 +12,6 @@ on:
 
 jobs:
   DeployPackage:
-    needs: RunTests
     name: Publish package
     if: github.ref == 'refs/heads/master'
     container:
