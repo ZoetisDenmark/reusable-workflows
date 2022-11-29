@@ -4,7 +4,7 @@ on:
   workflow_call:
 
 jobs:
-  triage:
+  RunTests:
     container:
       image: zoddev01:5000/vetscan-docker-base:latest
       options: --user root
@@ -13,6 +13,5 @@ jobs:
       - uses: webfactory/ssh-agent@v0.7.0
         with:
           ssh-private-key: ${{ secrets.SSH_KEY }}
-      - uses: actions/checkout@v2
-      - run: python3 -m pip install -r requirements-dev.txt
-      - run: ./run_tests.sh
+      - run: ./dependencies.sh
+      - run: ./run_tests.sh 
