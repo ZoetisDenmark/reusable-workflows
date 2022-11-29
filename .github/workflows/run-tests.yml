@@ -7,4 +7,4 @@ jobs:
   triage:
     runs-on: vetscan-docker
     steps:
-      - run: echo "lol"
+      - run: python3 -m pip install -r requirements.txt
