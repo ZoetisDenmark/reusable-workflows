@@ -2,12 +2,19 @@ name: Running common test
 
 on:
   workflow_call:
+    inputs:
+      docker-image:
+        required: true
+        type: string
+      repository-url:
+        required: true
+        type: string
 
 jobs:
   RunTests:
-    name: Install dependencies and run unittests
+    name: Run unittests
     container:
-      image: zoddev01:5000/vetscan-docker-base:latest
+      image: ${{inputs.docker-image}}
       options: --user root
     runs-on: vetscan-docker
     steps:
@@ -21,3 +28,17 @@ jobs:
         with:
           name: python-packages-version
           path: reports/requirements_list.txt
+
+  DeployPackage:
+    needs: RunTests
+    name: Publish package
+    if: github.ref == 'refs/heads/master'
+    container:
+      image: ${{inputs.docker-image}}
+      options: --user root
+    runs-on: vetscan-docker
+    steps:
+      - uses: actions/checkout@v2
+      - run: python3 -m pip install twine keyring artifacts-keyring
+      - run: python3 setup.py sdist bdist_wheel
+      - run: python3 -m twine upload --repository-url ${{inputs.repository-url}} -u ${{secrets.AZURE_USER}} -p ${{secrets.AZURE_TOKEN}} dist/*
