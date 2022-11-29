@@ -5,6 +5,7 @@ on:
 
 jobs:
   RunTests:
+    name: Install dependencies and run unittests
     container:
       image: zoddev01:5000/vetscan-docker-base:latest
       options: --user root
