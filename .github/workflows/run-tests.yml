@@ -5,9 +5,14 @@ on:
 
 jobs:
   triage:
+    container:
+      image: zoddev01:5000/vetscan-docker-base:latest
+      options: --user root
     runs-on: vetscan-docker
     steps:
-      - uses: webfactory/ssh-agent@v0.5.4
+      - uses: webfactory/ssh-agent@v0.7.0
         with:
           ssh-private-key: ${{ secrets.SSH_KEY }}
-      - run: python3 -m pip install -r requirements.txt
+      - uses: actions/checkout@v2
+      - run: python3 -m pip install -r requirements-dev.txt
+      - run: ./run_tests.sh
