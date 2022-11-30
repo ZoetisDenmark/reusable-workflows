@@ -6,12 +6,20 @@ on:
       docker-image:
         required: true
         type: string
+      working-directory:
+        required: false
+        type: string
+        default: ./
 jobs:
   RunTests:
     name: Run unittests
     container:
       image: ${{inputs.docker-image}}
       options: --user root
+    defaults:
+      run:
+        shell: bash
+        working-directory: ${{inputs.working-directory}}
     runs-on: vetscan-docker
     steps:
       - uses: actions/checkout@v2
