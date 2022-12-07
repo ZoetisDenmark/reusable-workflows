@@ -1,0 +1,33 @@
+name: Running common test
+
+on:
+  workflow_call:
+    inputs:
+#      docker-image:
+#        required: true
+#        type: string
+      working-directory:
+        required: false
+        type: string
+        default: ./
+jobs:
+  BuildImage:
+    name: Build Yocto image
+#    container:
+#      image: ${{inputs.docker-image}}
+#      options: --user root
+    defaults:
+      run:
+        shell: bash
+        working-directory: ${{inputs.working-directory}}
+    runs-on: CPHYoctoP1
+    steps:
+      - uses: actions/checkout@v2
+      - uses: webfactory/ssh-agent@v0.7.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_KEY }}
+      - run: sh '.ci/mol/build.sh'
+#      - uses: actions/upload-artifact@v3
+#        with:
+#          name: python-packages-version
+#          path: reports/requirements_list.txt
