@@ -27,7 +27,7 @@ jobs:
           ssh-private-key: ${{ secrets.SSH_KEY }}
       - uses: actions/checkout@v3
         with:
-          submodules: recursive
+          submodules: true
           ssh-key: ${{ secrets.SSH_KEY }}
       - run: .ci/mol/build.sh
 #      - uses: actions/upload-artifact@v3
