@@ -26,7 +26,17 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.SSH_KEY }}
       - uses: actions/checkout@v3
-      - run: git -c submodule."meta-python2".update=none submodule update --init --recursive --progress --depth=3
+      - name: Check file existence
+        id: meta_python_exists
+        uses: andstor/file-existence-action@v1
+        with:
+          files: "meta-python2"
+      - name: Checkout with meta-python
+        if: steps.meta_python_exists.outputs.files_exists == 'true'
+        run: |
+          echo "Checkout submodule including meta-python"
+          git -c submodule."meta-python2".update=none submodule update --init --recursive --progress --depth=3
+          git submodule update --init --recursive --progress meta-python2
       - run: .ci/mol/build.sh
 #      - uses: actions/upload-artifact@v3
 #        with:
