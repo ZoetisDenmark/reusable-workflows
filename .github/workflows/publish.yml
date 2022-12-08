@@ -17,7 +17,7 @@ on:
 jobs:
   DeployPackage:
     name: Publish package
-    if: github.ref == 'refs/heads/master'
+    if: github.ref == 'refs/heads/master' && github.event_name == 'push'
     container:
       image: ${{inputs.docker-image}}
       options: --user root
