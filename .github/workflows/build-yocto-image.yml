@@ -20,7 +20,7 @@ jobs:
       run:
         shell: bash
         working-directory: ${{inputs.working-directory}}
-    runs-on: [self-hosted, linux, vetscan-docker]
+    runs-on: [Yocto, self-hosted]
     steps:
       - uses: actions/checkout@v2
         with:
