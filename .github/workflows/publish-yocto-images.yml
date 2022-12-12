@@ -1,0 +1,16 @@
+name: Running common test
+
+on:
+  workflow_call:
+
+jobs:
+  PublishImage:
+    name: Publish Yocto image
+
+    runs-on: [Yocto, self-hosted]
+
+    steps:
+      - uses: actions/upload-artifact@v3
+        with:
+          name: built-yocto-images
+          path: ${{ env.ARTIFACT_FOLDER }}

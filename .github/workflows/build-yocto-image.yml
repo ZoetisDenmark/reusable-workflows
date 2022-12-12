@@ -3,24 +3,22 @@ name: Running common test
 on:
   workflow_call:
     inputs:
-#      docker-image:
-#        required: true
-#        type: string
       working-directory:
         required: false
         type: string
         default: ./
+
 jobs:
   BuildImage:
     name: Build Yocto image
-#    container:
-#      image: ${{inputs.docker-image}}
-#      options: --user root
+
     defaults:
       run:
         shell: bash
         working-directory: ${{inputs.working-directory}}
+
     runs-on: [Yocto, self-hosted]
+
     steps:
       - uses: webfactory/ssh-agent@v0.7.0
         with:
@@ -37,9 +35,4 @@ jobs:
           echo "Checkout submodule including meta-python"
           git -c submodule."meta-python2".update=none submodule update --init --recursive --progress --depth=3
           git submodule update --init --recursive --progress meta-python2
-      - run: .ci/mol/build.sh /home/zoddevadmin/yocto/mol-yoctotmp/deploy/images/vetscan-lec-imx8mp  # TODO: Replace wit variable
-#      - run: .ci/mol/build.sh ${{ BUILDIR }}
-#      - uses: actions/upload-artifact@v3
-#        with:
-#          name: python-packages-version
-#          path: reports/requirements_list.txt
+      - run: .ci/mol/build.sh ${{ env.ARTIFACT_FOLDER }}
