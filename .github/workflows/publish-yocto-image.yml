@@ -3,7 +3,7 @@ name: Running common test
 on:
   workflow_call:
     inputs:
-      artifacts-folder:
+      artifacts-dir:
         required: true
         type: string
 
@@ -17,4 +17,4 @@ jobs:
       - uses: actions/upload-artifact@v3
         with:
           name: built-yocto-images
-          path: ${{ inputs.artifacts-folder }}
+          path: ${{ inputs.artifacts-dir }}

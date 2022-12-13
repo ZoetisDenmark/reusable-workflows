@@ -3,7 +3,7 @@ name: Running common test
 on:
   workflow_call:
     inputs:
-      artifacts-folder:
+      artifacts-dir:
         required: true
         type: string
 
@@ -39,4 +39,4 @@ jobs:
           echo "Checkout submodule including meta-python"
           git -c submodule."meta-python2".update=none submodule update --init --recursive --progress --depth=3
           git submodule update --init --recursive --progress meta-python2
-      - run: .ci/mol/build.sh ${{ inputs.artifacts-folder }}
+      - run: .ci/mol/build.sh ${{ inputs.artifacts-dir }}
