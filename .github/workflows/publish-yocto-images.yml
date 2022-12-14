@@ -2,6 +2,15 @@ name: Running common test
 
 on:
   workflow_call:
+    inputs:
+      artifacts-name:
+        required: false
+        type: string
+        default: yocto-images
+
+      artifacts-dir:
+        required: true
+        type: string
 
 jobs:
   PublishImage:
@@ -12,5 +21,5 @@ jobs:
     steps:
       - uses: actions/upload-artifact@v3
         with:
-          name: built-yocto-images
-          path: ${{ env.ARTIFACT_FOLDER }}
+          name: ${{ inputs.artifacts-name }}
+          path: ${{ inputs.artifacts-dir }}
