@@ -26,8 +26,10 @@ jobs:
     steps:
       - name: Set current date as env variable
         if: ${{ inputs.artifacts-tag-date }}
-          run: echo "DATE_TAG=$(date +'%Y%m%d%H%M%S')" >> $GITHUB_ENV
+        run: |
+          echo "DATE_TAG=$(date +'%Y%m%d%H%M%S')" >> $GITHUB_ENV
+          echo "Build date: $DATE_TAG"
       - uses: actions/upload-artifact@v3
         with:
-          name: ${{ inputs.artifacts-name }}-$DATE_TAG
+          name: ${{ inputs.artifacts-name }}-${{ env.DATE_TAG }}
           path: ${{ inputs.artifacts-dir }}
