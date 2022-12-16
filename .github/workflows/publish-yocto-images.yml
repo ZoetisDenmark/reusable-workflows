@@ -1,0 +1,35 @@
+name: Running common test
+
+on:
+  workflow_call:
+    inputs:
+      artifacts-name:
+        required: false
+        type: string
+        default: yocto-images
+
+      artifacts-tag-date:
+        required: false
+        type: boolean
+        default: true
+
+      artifacts-dir:
+        required: true
+        type: string
+
+jobs:
+  PublishImage:
+    name: Publish Yocto image
+
+    runs-on: [Yocto, self-hosted]
+
+    steps:
+      - name: Set current date as env variable
+        if: ${{ inputs.artifacts-tag-date }}
+        run: |
+          echo "DATE_TAG=$(date +'%Y%m%d%H%M%S')" >> $GITHUB_ENV
+          echo "Build date: $DATE_TAG"
+      - uses: actions/upload-artifact@v3
+        with:
+          name: ${{ inputs.artifacts-name }}-${{ env.DATE_TAG }}
+          path: ${{ inputs.artifacts-dir }}
