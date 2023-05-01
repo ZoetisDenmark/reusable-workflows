@@ -3,14 +3,15 @@ name: Running common test
 on:
   workflow_call:
     inputs:
+      instrument-type:
+        required: true
+        type: string
+      instrument-machine:
+        required: true
+        type: string
       artifacts-dir:
         required: true
         type: string
-
-      working-directory:
-        required: false
-        type: string
-        default: ./
 
 jobs:
   BuildImage:
@@ -19,7 +20,6 @@ jobs:
     defaults:
       run:
         shell: bash
-        working-directory: ${{inputs.working-directory}}
 
     runs-on: [Yocto, self-hosted]
 
@@ -28,15 +28,4 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.SSH_KEY }}
       - uses: actions/checkout@v3
-      - name: Check file existence
-        id: meta_python_exists
-        uses: andstor/file-existence-action@v1
-        with:
-          files: "meta-python2"
-      - name: Checkout with meta-python
-        if: steps.meta_python_exists.outputs.files_exists == 'true'
-        run: |
-          echo "Checkout submodule including meta-python"
-          git -c submodule."meta-python2".update=none submodule update --init --recursive --progress --depth=3
-          git submodule update --init --recursive --progress meta-python2
-      - run: .ci/build.sh ${{ inputs.artifacts-dir }}
+      - run: ./meta-zoetis/scripts/dev_setup.py --hw ${{ inputs.instrument-type }} ${{ inputs.instrument-machine }} --skip-latest-meta-zoetis-tag-check
