@@ -9,6 +9,9 @@ on:
       instrument-machine:
         required: true
         type: string
+      target-list:
+        required: true
+        type: string
       artifacts-dir:
         required: true
         type: string
@@ -29,3 +32,4 @@ jobs:
           ssh-private-key: ${{ secrets.SSH_KEY }}
       - uses: actions/checkout@v3
       - run: ./meta-zoetis/scripts/dev_setup.py --hw ${{ inputs.instrument-type }} ${{ inputs.instrument-machine }} --skip-latest-meta-zoetis-tag-check
+      - run: TARGETS="${{ inputs.target-list }}" ./run_build.sh
