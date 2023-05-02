@@ -31,7 +31,6 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.SSH_KEY }}
       - uses: actions/checkout@v3
-        with:
-          submodules: 'true'
-      - run: ./meta-zoetis/scripts/dev_setup.py --hw ${{ inputs.instrument-type }} ${{ inputs.instrument-machine }} --skip-latest-meta-zoetis-tag-check
+      - run: git submodule init && git submodule update --recursive
+      - run: ./meta-zoetis/scripts/dev_setup.py --hw ${{ inputs.instrument-machine }} ${{ inputs.instrument-type }} --skip-latest-meta-zoetis-tag-check
       - run: TARGETS="${{ inputs.target-list }}" ./run_build.sh
