@@ -12,9 +12,6 @@ on:
       target-list:
         required: true
         type: string
-      artifacts-dir:
-        required: true
-        type: string
 
 jobs:
   BuildImage:
