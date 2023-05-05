@@ -1,0 +1,22 @@
+name: "worflow-experiments"
+
+on:
+  push:
+
+jobs:
+  BuildImage:
+    name: Build Yocto image
+
+    defaults:
+      run:
+        shell: bash
+
+    runs-on: [Yocto, self-hosted]
+
+    steps:
+      - uses: webfactory/ssh-agent@v0.7.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_KEY }}
+      - uses: actions/checkout@v3
+      - run: export MY_VARIABLE="I AM MY_VARIABLE"
+      - run: echo "Written down... $MY_VARIABLE"
