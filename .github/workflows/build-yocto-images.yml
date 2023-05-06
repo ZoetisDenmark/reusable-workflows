@@ -57,5 +57,6 @@ jobs:
           echo "::notice ::Setting the Python script return values to GHA ENV variables."
           echo "VF1: ${{ env.VF1 }}"
           echo "VF2: ${{ env.VF2 }}"
+          echo "VF2: $VF2 (as direct variable call)"
           echo "VF_ERR: ${{ env.VF_ERR }}"
           echo "VF_MSG: ${{ env.VF_MSG }}"
