@@ -1,5 +1,8 @@
 name: "worflow-experiments"
 
+env:
+  VF1: None
+
 on:
   push:
 
@@ -45,3 +48,14 @@ jobs:
           echo "VF2: ${{ steps.scripted-variable-addition.outputs.VF2 }}"
           echo "VF_ERR: ${{ steps.scripted-variable-addition.outputs.VF_ERR }}"
           echo "VF_MSG: ${{ steps.scripted-variable-addition.outputs.VF_MSG }}"
+      # Testing default environment variable
+      - run: |
+          echo "VF1: ${{ env.VF1 }} (default)"
+      # Same as 'scripted-variable-addition', but using environment variables
+      - run: ./variable-feeder.py >> "$GITHUB_ENV"
+      - run: |
+          echo "::notice ::Setting the Python script return values to GHA ENV variables."
+          echo "VF1: ${{ env.VF1 }}"
+          echo "VF2: ${{ env.VF2 }}"
+          echo "VF_ERR: ${{ env.VF_ERR }}"
+          echo "VF_MSG: ${{ env.VF_MSG }}"
