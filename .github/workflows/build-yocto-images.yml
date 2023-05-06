@@ -45,5 +45,3 @@ jobs:
           echo "VF2: ${{ steps.scripted-variable-addition.outputs.VF2 }}"
           echo "VF_ERR: ${{ steps.scripted-variable-addition.outputs.VF_ERR }}"
           echo "VF_MSG: ${{ steps.scripted-variable-addition.outputs.VF_MSG }}"
-
-      # Upcoming: using logging handler in Python script
