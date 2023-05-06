@@ -18,5 +18,23 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.SSH_KEY }}
       - uses: actions/checkout@v3
-      - run: export MY_VARIABLE="I AM MY_VARIABLE"
-      - run: echo "Written down... $MY_VARIABLE"
+      - id: add-variable
+        run: printf "VAR=I AM MY_VARIABLE" >> "$GITHUB_OUTPUT"
+      - run: echo "Written down... ${{ steps.add-variable.outputs.VAR }}"
+      - id: add-non-variable-to-stderr
+        run: python -c 'import os; os.write(2, b"error\n")' >> "$GITHUB_OUTPUT"
+      - run: echo "Written down (bis)... ${{ steps.add-variable.outputs.VAR }}"
+      - id: add-multiple-variables
+        run: |
+          # Adding 1st variable in the multi-variable set
+          printf "VAR1=I AM MY_VARIABLE 1\n" >> "$GITHUB_OUTPUT"
+          # Adding 2nd variable independently
+          echo "VAR2=I AM VARIABLE 2" >> "$GITHUB_OUTPUT"
+          # Adding 3th and 4th variables jointly
+          printf "VAR3=I AM VARIABLE 3\nVAR4=I AM VARIABLE 4\n" >> "$GITHUB_OUTPUT"
+      - run: |
+          echo "VAR1: ${{ steps.add-multiple-variables.outputs.VAR1 }}"
+          echo "VAR2: ${{ steps.add-multiple-variables.outputs.VAR2 }}"
+          echo "VAR3: ${{ steps.add-multiple-variables.outputs.VAR3 }}"
+          echo "VAR4: ${{ steps.add-multiple-variables.outputs.VAR4 }}"
+          echo "VAR: ${{ steps.add-variable.outputs.VAR }}"
