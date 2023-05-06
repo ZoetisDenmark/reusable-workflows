@@ -38,3 +38,12 @@ jobs:
           echo "VAR3: ${{ steps.add-multiple-variables.outputs.VAR3 }}"
           echo "VAR4: ${{ steps.add-multiple-variables.outputs.VAR4 }}"
           echo "VAR: ${{ steps.add-variable.outputs.VAR }}"
+      - id: scripted-variable-addition
+        run: ./variable-feeder.py >> "$GITHUB_OUTPUT"
+      - run: |
+          echo "VF1: ${{ steps.scripted-variable-addition.outputs.VF1 }}"
+          echo "VF2: ${{ steps.scripted-variable-addition.outputs.VF2 }}"
+          echo "VF_ERR: ${{ steps.scripted-variable-addition.outputs.VF_ERR }}"
+          echo "VF_MSG: ${{ steps.scripted-variable-addition.outputs.VF_MSG }}"
+
+      # Upcoming: using logging handler in Python script
