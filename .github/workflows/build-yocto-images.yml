@@ -1,15 +1,18 @@
 name: Running common test
 
+env:
+  build_dir: None
+
 on:
   workflow_call:
     inputs:
-      instrument-type:
+      instrument_type:
         required: true
         type: string
-      instrument-machine:
+      instrument_machine:
         required: true
         type: string
-      target-list:
+      target_list:
         required: true
         type: string
 
@@ -29,5 +32,22 @@ jobs:
           ssh-private-key: ${{ secrets.SSH_KEY }}
       - uses: actions/checkout@v3
       - run: git submodule init && git submodule update --recursive
-      - run: ./meta-zoetis/scripts/dev_setup.py --hw ${{ inputs.instrument-machine }} ${{ inputs.instrument-type }} --skip-latest-meta-zoetis-tag-check
-      - run: TARGETS="${{ inputs.target-list }}" ./run_build.sh
+      - run: ./meta-zoetis/scripts/dev_setup.py --hw ${{ inputs.instrument_machine }} ${{ inputs.instrument_type }} --skip-latest-meta-zoetis-tag-check >> "$GITHUB_ENV"
+#      - run: TARGETS="${{ inputs.target_list }}" "$build_dir/run_build.sh"
+      - run: echo "images_dir=$build_dir/tmp/deploy/images" >> "$GITHUB_ENV"
+      - uses: actions/upload-artifact@v3
+        with:
+          name: ${{ inputs.instrument_type }}-${{ inputs.instrument_machine }}-update-image-development.swu
+          path: ${{ env.images_dir }}/vetscan-${{ inputs.instrument_machine }}/${{ inputs.instrument_type }}-*-update-image-*-development-*.swu
+      - uses: actions/upload-artifact@v3
+        with:
+          name: ${{ inputs.instrument_type }}-${{ inputs.instrument_machine }}-image-development.wic.zst
+          path: ${{ env.images_dir }}/vetscan-${{ inputs.instrument_machine }}/${{ inputs.instrument_type }}-*-image-*-development-*.wic.zst
+      - uses: actions/upload-artifact@v3
+        with:
+          name: ${{ inputs.instrument_type }}-${{ inputs.instrument_machine }}-image-development.wic.bmap
+          path: ${{ env.images_dir }}/vetscan-${{ inputs.instrument_machine }}/${{ inputs.instrument_type }}-*-image-*-development-*.wic.bmap
+      - uses: actions/upload-artifact@v3
+        with:
+          name: ${{ inputs.instrument_type }}-${{ inputs.instrument_machine }}-image-development.manifest
+          path: ${{ env.images_dir }}/vetscan-${{ inputs.instrument_machine }}/${{ inputs.instrument_type }}-*-image-*-development-*.manifest
