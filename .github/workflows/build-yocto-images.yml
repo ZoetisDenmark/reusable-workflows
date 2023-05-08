@@ -9,7 +9,7 @@ on:
       instrument_type:
         required: true
         type: string
-      instrument_machine:
+      instrument_hw:
         required: true
         type: string
       target_list:
@@ -32,22 +32,22 @@ jobs:
           ssh-private-key: ${{ secrets.SSH_KEY }}
       - uses: actions/checkout@v3
       - run: git submodule init && git submodule update --recursive
-      - run: ./meta-zoetis/scripts/dev_setup.py --hw ${{ inputs.instrument_machine }} ${{ inputs.instrument_type }} --skip-latest-meta-zoetis-tag-check >> "$GITHUB_ENV"
-#      - run: TARGETS="${{ inputs.target_list }}" "$build_dir/run_build.sh"
+      - run: ./meta-zoetis/scripts/dev_setup.py --hw ${{ inputs.instrument_hw }} ${{ inputs.instrument_type }} --build_dir ${{ inputs.instrument_type }}-${{ vars.GITHUB_REF_NAME }} --skip-latest-meta-zoetis-tag-check >> "$GITHUB_ENV"
+      - run: TARGETS="${{ inputs.target_list }}" "$build_dir/run_build.sh"
       - run: echo "images_dir=$build_dir/tmp/deploy/images" >> "$GITHUB_ENV"
       - uses: actions/upload-artifact@v3
         with:
-          name: ${{ inputs.instrument_type }}-${{ inputs.instrument_machine }}-update-image-development.swu
-          path: ${{ env.images_dir }}/vetscan-${{ inputs.instrument_machine }}/${{ inputs.instrument_type }}-*-update-image-*-development-*.swu
+          name: ${{ inputs.instrument_type }}-${{ inputs.instrument_hw }}-update-image-development.swu
+          path: ${{ env.images_dir }}/vetscan-${{ inputs.instrument_hw }}/${{ inputs.instrument_type }}-*-update-image-*-development-*.swu
       - uses: actions/upload-artifact@v3
         with:
-          name: ${{ inputs.instrument_type }}-${{ inputs.instrument_machine }}-image-development.wic.zst
-          path: ${{ env.images_dir }}/vetscan-${{ inputs.instrument_machine }}/${{ inputs.instrument_type }}-*-image-*-development-*.wic.zst
+          name: ${{ inputs.instrument_type }}-${{ inputs.instrument_hw }}-image-development.wic.zst
+          path: ${{ env.images_dir }}/vetscan-${{ inputs.instrument_hw }}/${{ inputs.instrument_type }}-*-image-*-development-*.wic.zst
       - uses: actions/upload-artifact@v3
         with:
-          name: ${{ inputs.instrument_type }}-${{ inputs.instrument_machine }}-image-development.wic.bmap
-          path: ${{ env.images_dir }}/vetscan-${{ inputs.instrument_machine }}/${{ inputs.instrument_type }}-*-image-*-development-*.wic.bmap
+          name: ${{ inputs.instrument_type }}-${{ inputs.instrument_hw }}-image-development.wic.bmap
+          path: ${{ env.images_dir }}/vetscan-${{ inputs.instrument_hw }}/${{ inputs.instrument_type }}-*-image-*-development-*.wic.bmap
       - uses: actions/upload-artifact@v3
         with:
-          name: ${{ inputs.instrument_type }}-${{ inputs.instrument_machine }}-image-development.manifest
-          path: ${{ env.images_dir }}/vetscan-${{ inputs.instrument_machine }}/${{ inputs.instrument_type }}-*-image-*-development-*.manifest
+          name: ${{ inputs.instrument_type }}-${{ inputs.instrument_hw }}-image-development.manifest
+          path: ${{ env.images_dir }}/vetscan-${{ inputs.instrument_hw }}/${{ inputs.instrument_type }}-*-image-*-development-*.manifest
