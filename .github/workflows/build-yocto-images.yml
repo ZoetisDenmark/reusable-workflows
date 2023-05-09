@@ -36,8 +36,8 @@ jobs:
           ssh-private-key: ${{ secrets.SSH_KEY }}
       - uses: actions/checkout@v3
       - run: git submodule init && git submodule update --recursive
-      - run: ./meta-zoetis/scripts/dev_setup.py --hw ${{ inputs.instrument_hw }} ${{ inputs.instrument_type }} --build_dir ${{ inputs.build_dir }} --skip-latest-meta-zoetis-tag-check >> "$GITHUB_ENV"
-      - run: TARGETS="${{ inputs.target_list }}" "$build_dir/run_build.sh"
+      - run: ./meta-zoetis/scripts/dev_setup.py --hw ${{ inputs.instrument_hw }} ${{ inputs.instrument_type }} --build-dir ${{ inputs.build_dir }} --skip-latest-meta-zoetis-tag-check >> "$GITHUB_ENV"
+      - run: TARGETS="${{ inputs.target_list }}" $build_dir/run_build.sh
       - run: echo "images_dir=$build_dir/tmp/deploy/images" >> "$GITHUB_ENV"
       - uses: actions/upload-artifact@v3
         with:
