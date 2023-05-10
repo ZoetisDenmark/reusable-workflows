@@ -1,16 +1,24 @@
 name: Running common test
 
+env:
+  build_dir: None
+
 on:
   workflow_call:
     inputs:
-      artifacts-dir:
+      instrument_type:
         required: true
         type: string
-
-      working-directory:
-        required: false
+      instrument_hw:
+        required: true
         type: string
-        default: ./
+      target_list:
+        required: true
+        type: string
+      build_dir:
+        required: false
+        default: 'build'
+        type: string
 
 jobs:
   BuildImage:
@@ -19,7 +27,6 @@ jobs:
     defaults:
       run:
         shell: bash
-        working-directory: ${{inputs.working-directory}}
 
     runs-on: [Yocto, self-hosted]
 
@@ -28,15 +35,25 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.SSH_KEY }}
       - uses: actions/checkout@v3
-      - name: Check file existence
-        id: meta_python_exists
-        uses: andstor/file-existence-action@v1
+      - run: git submodule init && git submodule update --recursive
+      - run: |
+          build_dir_name="$(echo ${{ inputs.instrument_type }}-$GITHUB_REF_NAME | tr '/-' '_')"
+          ./meta-zoetis/scripts/dev_setup.py --hw ${{ inputs.instrument_hw }} ${{ inputs.instrument_type }} --build-dir $build_dir_name --skip-latest-meta-zoetis-tag-check >> "$GITHUB_ENV"
+      - run: TARGETS="${{ inputs.target_list }}" $build_dir/run_build.sh
+      - run: echo "images_dir=$build_dir/tmp/deploy/images" >> "$GITHUB_ENV"
+      - uses: actions/upload-artifact@v3
         with:
-          files: "meta-python2"
-      - name: Checkout with meta-python
-        if: steps.meta_python_exists.outputs.files_exists == 'true'
-        run: |
-          echo "Checkout submodule including meta-python"
-          git -c submodule."meta-python2".update=none submodule update --init --recursive --progress --depth=3
-          git submodule update --init --recursive --progress meta-python2
-      - run: .ci/build.sh ${{ inputs.artifacts-dir }}
+          name: ${{ inputs.instrument_type }}-${{ inputs.instrument_hw }}-update-image-development.swu
+          path: ${{ env.images_dir }}/vetscan-${{ inputs.instrument_hw }}/${{ inputs.instrument_type }}-*-update-image-*-development-*.swu
+      - uses: actions/upload-artifact@v3
+        with:
+          name: ${{ inputs.instrument_type }}-${{ inputs.instrument_hw }}-image-development.wic.zst
+          path: ${{ env.images_dir }}/vetscan-${{ inputs.instrument_hw }}/${{ inputs.instrument_type }}-*-image-*-development-*.wic.zst
+      - uses: actions/upload-artifact@v3
+        with:
+          name: ${{ inputs.instrument_type }}-${{ inputs.instrument_hw }}-image-development.wic.bmap
+          path: ${{ env.images_dir }}/vetscan-${{ inputs.instrument_hw }}/${{ inputs.instrument_type }}-*-image-*-development-*.wic.bmap
+      - uses: actions/upload-artifact@v3
+        with:
+          name: ${{ inputs.instrument_type }}-${{ inputs.instrument_hw }}-image-development.manifest
+          path: ${{ env.images_dir }}/vetscan-${{ inputs.instrument_hw }}/${{ inputs.instrument_type }}-*-image-*-development-*.manifest
