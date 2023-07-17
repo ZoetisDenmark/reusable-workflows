@@ -45,15 +45,19 @@ jobs:
         with:
           name: ${{ inputs.instrument_type }}-${{ inputs.instrument_hw }}-update-image-development.swu
           path: ${{ env.images_dir }}/vetscan-${{ inputs.instrument_hw }}/${{ inputs.instrument_type }}-*-update-image-*-development-*.swu
+          if-no-files-found: error
       - uses: actions/upload-artifact@v3
         with:
           name: ${{ inputs.instrument_type }}-${{ inputs.instrument_hw }}-image-development.wic.zst
           path: ${{ env.images_dir }}/vetscan-${{ inputs.instrument_hw }}/${{ inputs.instrument_type }}-*-image-*-development-*.wic.zst
+          if-no-files-found: error
       - uses: actions/upload-artifact@v3
         with:
           name: ${{ inputs.instrument_type }}-${{ inputs.instrument_hw }}-image-development.wic.bmap
           path: ${{ env.images_dir }}/vetscan-${{ inputs.instrument_hw }}/${{ inputs.instrument_type }}-*-image-*-development-*.wic.bmap
+          if-no-files-found: error
       - uses: actions/upload-artifact@v3
         with:
           name: ${{ inputs.instrument_type }}-${{ inputs.instrument_hw }}-image-development.manifest
           path: ${{ env.images_dir }}/vetscan-${{ inputs.instrument_hw }}/${{ inputs.instrument_type }}-*-image-*-development-*.manifest
+          if-no-files-found: error
