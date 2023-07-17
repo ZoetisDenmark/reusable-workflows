@@ -35,7 +35,9 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.SSH_KEY }}
       - uses: actions/checkout@v3
-      - run: git submodule init && git submodule update --recursive
+        with:
+          token: ${{secrets.PAT}}
+          submodules: recursive
       - run: |
           build_dir_name="$(echo ${{ inputs.instrument_type }}-$GITHUB_REF_NAME | tr '/-' '_')"
           ./meta-zoetis/scripts/dev_setup.py --hw ${{ inputs.instrument_hw }} ${{ inputs.instrument_type }} --build-dir $build_dir_name --skip-latest-meta-zoetis-tag-check >> "$GITHUB_ENV"
