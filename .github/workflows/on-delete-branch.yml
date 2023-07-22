@@ -1,0 +1,24 @@
+name: Delete development branch
+
+on:
+  workflow_call:
+    inputs:
+      instrument_type:
+        required: true
+        type: string
+
+jobs:
+  RemoveBuildDirectory:
+    name: Remove build directories for the deleted branch
+    strategy:
+      matrix:
+        machine: [CPHYoctoP1, CPHYoctoP2]
+    runs-on: ${{ matrix.machine }}
+    steps:
+    - name: Setup build directory path
+      # WARNING: BE CAREFUL TO MATCH THE BUILD DIRECTORY PATH IN ALL PLACES OF USE
+      run: |
+        build_dir_name="$(echo ${{ inputs.instrument_type }}-$GITHUB_REF_NAME | tr '/-' '_')"
+        echo build_dir="/yocto/$USER/$build_dir_name" >> "$GITHUB_ENV"
+    - name: Remove the build directory on the current machine
+      run: rm -rf $build_dir
