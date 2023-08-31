@@ -11,16 +11,20 @@ on:
       instrument_type:
         required: true
         type: string
+        description: The instrument e.g ltf, mol
       instrument_hw:
         required: true
         type: string
+        description: The instrument hardware e.g ltf, mol
       target_list:
         required: true
         type: string
+        description: The list of Yocto targets to build
       build_dir:
         required: false
         default: 'build'
         type: string
+        description: The build directory to use in Yocto builds
 
 jobs:
   build_image:
