@@ -92,8 +92,8 @@ jobs:
         uses: convictional/trigger-workflow-and-wait@v1.6.5
         with:
           owner: ZoetisDenmark
-          repo: vetscan-integration-tests
-          ref: ahe/trigger-mol-tests
+          repo: vetscan-${{ inputs.instrument_type }}
+          ref: ahe/auto-run-inttests
           github_token: ${{ secrets.PAT_GITHUB }}
           comment_downstream_url: ${{ github.event.pull_request.comments_url }}
           workflow_file_name: integration-tests.yml
