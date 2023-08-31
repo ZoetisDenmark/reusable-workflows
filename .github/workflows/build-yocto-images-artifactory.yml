@@ -65,6 +65,8 @@ jobs:
             chmod 777 "${{env.TMP_ARTIFACTS_DIR}}"
 
             .ci/copy_artifacts.sh "${{env.TMP_ARTIFACTS_DIR}}" && cd "${{env.TMP_ARTIFACTS_DIR}}" &&
+            chmod -R 777 "${{env.TMP_ARTIFACTS_DIR}}"
+
             upload-artifacts --user admin --password ${{secrets.ARTIFACTORY_PASSWORD}} \
                              --repository "${{env.ARTIFACT_REPO}}" --version "${{env.VERSION}}" \
                              --allow_overwrite True --files "*"
@@ -72,14 +74,14 @@ jobs:
       # This has to be done because of the previous step with Uploading artifacts
       # is done by root in the docker container. A ticket to not do this as root including all of our
       # workflow files has been created here VES-4863
-      - name: Delete local artifacts
-        uses: addnab/docker-run-action@v3
-        if: always()
-        with:
-          image: zoddev01:5000/vetscan-docker-base:latest
-          options: -v ${{ github.workspace }}:/home/developer --user root
-          run: |
-            rm -rf "${{env.TMP_ARTIFACTS_DIR}}"
+      # - name: Delete local artifacts
+      #   uses: addnab/docker-run-action@v3
+      #   if: always()
+      #   with:
+      #     image: zoddev01:5000/vetscan-docker-base:latest
+      #     options: -v ${{ github.workspace }}:/home/developer --user root
+      #     run: |
+      #       rm -rf "${{env.TMP_ARTIFACTS_DIR}}"
 
   trigger_integration_tests:
     name: Trigger integration tests run
@@ -98,4 +100,4 @@ jobs:
           github_token: ${{ secrets.PAT_GITHUB }}
           comment_downstream_url: ${{ github.event.pull_request.comments_url }}
           workflow_file_name: integration-tests.yml
-          client_payload: '{ "repository": "${{env.ARTIFACT_REPO}}", "version": "${{env.VERSION}}", "dut-label": "${{inputs.instrument_hw}}-instrument"  } '
+          client_payload: '{ "repository": "${{env.ARTIFACT_REPO}}", "version": "${{env.VERSION}}", "dut-label": "${{inputs.instrument_hw}}-instrument" }'
