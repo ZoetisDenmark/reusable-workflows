@@ -23,7 +23,7 @@ on:
         type: string
 
 jobs:
-  BuildImage:
+  build_image:
     name: Build Yocto image
 
     defaults:
@@ -75,3 +75,22 @@ jobs:
           options: -v ${{ github.workspace }}:/home/developer --user root
           run: |
             rm -rf "${{env.TMP_ARTIFACTS_DIR}}"
+
+  trigger_integration_tests:
+    name: Trigger integration tests run
+    runs-on: [Yocto, self-hosted]
+    needs: [build_image]
+    env:
+      VERSION: ${{ needs.build_image.outputs.VERSION }}
+    steps:
+      - uses: actions/checkout@v3
+      - name: Running integration tests
+        uses: convictional/trigger-workflow-and-wait@v1.6.5
+        with:
+          owner: ZoetisDenmark
+          repo: vetscan-integration-tests
+          ref: master
+          github_token: ${{ secrets.PAT_GITHUB }}
+          comment_downstream_url: ${{ github.event.pull_request.comments_url }}
+          workflow_file_name: integration-tests.yml
+          client_payload: '{ "repository": "${{env.ARTIFACT_REPO}}", "version": "${{env.VERSION}}" } '
