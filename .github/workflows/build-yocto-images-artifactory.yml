@@ -47,7 +47,7 @@ jobs:
       - run: |
           build_dir_name="$(echo ${{ inputs.instrument_type }}-$GITHUB_REF_NAME | tr '/-' '_')"
           ./meta-zoetis/scripts/dev_setup.py --hw ${{ inputs.instrument_hw }} ${{ inputs.instrument_type }} --build-dir $build_dir_name --skip-latest-meta-zoetis-tag-check >> "$GITHUB_ENV"
-      #- run: TARGETS="${{ inputs.target_list }}" $build_dir/run_build.sh
+      - run: TARGETS="${{ inputs.target_list }}" $build_dir/run_build.sh
       - run: echo "images_dir=$build_dir/tmp/deploy/images" >> "$GITHUB_ENV"
       - run: echo "VERSION=$(python3 meta-zoetis/scripts/get_version_string.py)" >> $GITHUB_ENV
       - name: Uploading artifacts
@@ -101,9 +101,9 @@ jobs:
         uses: convictional/trigger-workflow-and-wait@v1.6.5
         with:
           owner: ZoetisDenmark
-          repo: vetscan-${{ inputs.instrument_type }}
+          repo: vetscan-mol
           ref: ahe/auto-run-inttests
           github_token: ${{ secrets.PAT_GITHUB }}
-          comment_downstream_url: ${{ github.event.pull_request.comments_url }}
+          #comment_downstream_url: ${{ github.event.pull_request.comments_url }}
           workflow_file_name: integration-tests.yml
           client_payload: '{ "repository": "${{env.ARTIFACT_REPO}}", "version": "${{env.VERSION}}", "dut-label": "${{inputs.instrument_hw}}-instrument" }'
