@@ -4,6 +4,8 @@ env:
   build_dir: None
   ARTIFACT_REPO: vetscan-${{ inputs.instrument_hw }}-instrument-${{ (github.head_ref != '' && 'pull-requests') || (startsWith(github.ref_name, 'release_') && 'releases') || (github.ref_name == 'master' && 'master') || 'branches' }}
   TMP_ARTIFACTS_DIR: tmp_artifacts
+  ACTIONS_RUNNER_DEBUG: true
+  ACTIONS_STEP_DEBUG: true
 
 on:
   workflow_call:
@@ -47,35 +49,36 @@ jobs:
       - run: |
           build_dir_name="$(echo ${{ inputs.instrument_type }}-$GITHUB_REF_NAME | tr '/-' '_')"
           ./meta-zoetis/scripts/dev_setup.py --hw ${{ inputs.instrument_hw }} ${{ inputs.instrument_type }} --build-dir $build_dir_name --skip-latest-meta-zoetis-tag-check >> "$GITHUB_ENV"
-      - run: TARGETS="${{ inputs.target_list }}" $build_dir/run_build.sh
-      - run: echo "images_dir=$build_dir/tmp/deploy/images" >> "$GITHUB_ENV"
-      - run: echo "VERSION=$(python3 meta-zoetis/scripts/get_version_string.py)" >> $GITHUB_ENV
-      - name: Uploading artifacts
-        uses: addnab/docker-run-action@v3
-        with:
-          image: zoddev01:5000/vetscan-docker-base:latest
-          options: -v ${{ github.workspace }}:/home/developer -v ${{ env.build_dir }}:/home/developer/build --user root
-          run: |
-            python3 -m pip install \
-              git+https://${{secrets.PAT_GITHUB}}@github.com/ZoetisDenmark/vetscan-pipeline-tools#subdirectory=artifact-tools
+      - run: echo "VERSION=0.5.2+pr_44.402.18" >> $GITHUB_ENV
+      # - run: TARGETS="${{ inputs.target_list }}" $build_dir/run_build.sh
+      # - run: echo "images_dir=$build_dir/tmp/deploy/images" >> "$GITHUB_ENV"
+      # - run: echo "VERSION=$(python3 meta-zoetis/scripts/get_version_string.py)" >> $GITHUB_ENV
+      # - name: Uploading artifacts
+      #   uses: addnab/docker-run-action@v3
+      #   with:
+      #     image: zoddev01:5000/vetscan-docker-base:latest
+      #     options: -v ${{ github.workspace }}:/home/developer -v ${{ env.build_dir }}:/home/developer/build
+      #     run: |
+      #       python3 -m pip install \
+      #         git+https://${{secrets.PAT_GITHUB}}@github.com/ZoetisDenmark/vetscan-pipeline-tools#subdirectory=artifact-tools
 
-            pwd
-            if [ -d "${{env.TMP_ARTIFACTS_DIR}}" ]; then rm -rf "${{env.TMP_ARTIFACTS_DIR}}"; fi
-            mkdir -p "${{env.TMP_ARTIFACTS_DIR}}"
-            chmod 777 "${{env.TMP_ARTIFACTS_DIR}}"
+      #       pwd
+      #       if [ -d "${{env.TMP_ARTIFACTS_DIR}}" ]; then rm -rf "${{env.TMP_ARTIFACTS_DIR}}"; fi
+      #       mkdir -p "${{env.TMP_ARTIFACTS_DIR}}"
+      #       chmod 777 "${{env.TMP_ARTIFACTS_DIR}}"
 
-            echo "Copying artifacts"
-            ls -la
-            .ci/copy_artifacts.sh "${{env.TMP_ARTIFACTS_DIR}}" &&
-            chmod -R 777 "${{env.TMP_ARTIFACTS_DIR}}" &&
-            cd "${{env.TMP_ARTIFACTS_DIR}}" &&
-            upload-artifacts --user admin --password ${{secrets.ARTIFACTORY_PASSWORD}} \
-                             --repository "${{env.ARTIFACT_REPO}}" --version "${{env.VERSION}}" \
-                             --allow_overwrite True --files "*"
+      #       echo "Copying artifacts"
+      #       ls -la
+      #       .ci/copy_artifacts.sh "${{env.TMP_ARTIFACTS_DIR}}" &&
+      #       chmod -R 777 "${{env.TMP_ARTIFACTS_DIR}}" &&
+      #       cd "${{env.TMP_ARTIFACTS_DIR}}" &&
+      #       upload-artifacts --user admin --password ${{secrets.ARTIFACTORY_PASSWORD}} \
+      #                        --repository "${{env.ARTIFACT_REPO}}" --version "${{env.VERSION}}" \
+      #                        --allow_overwrite True --files "*"
 
-            echo "Cleaning up tmp artifacts"
-            rm -rf "${{env.TMP_ARTIFACTS_DIR}}"
-            ls -la
+      #       echo "Cleaning up tmp artifacts"
+      #       rm -rf "${{env.TMP_ARTIFACTS_DIR}}"
+      #       ls -la
 
       # This has to be done because of the previous step with Uploading artifacts
       # is done by root in the docker container. A ticket to not do this as root including all of our
