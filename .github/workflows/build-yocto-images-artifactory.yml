@@ -59,17 +59,23 @@ jobs:
             python3 -m pip install \
               git+https://${{secrets.PAT_GITHUB}}@github.com/ZoetisDenmark/vetscan-pipeline-tools#subdirectory=artifact-tools
 
-            env
+            pwd
             if [ -d "${{env.TMP_ARTIFACTS_DIR}}" ]; then rm -rf "${{env.TMP_ARTIFACTS_DIR}}"; fi
             mkdir -p "${{env.TMP_ARTIFACTS_DIR}}"
             chmod 777 "${{env.TMP_ARTIFACTS_DIR}}"
 
-            .ci/copy_artifacts.sh "${{env.TMP_ARTIFACTS_DIR}}" && cd "${{env.TMP_ARTIFACTS_DIR}}" &&
-            chmod -R 777 "${{env.TMP_ARTIFACTS_DIR}}"
-
+            echo "Copying artifacts"
+            ls -la
+            .ci/copy_artifacts.sh "${{env.TMP_ARTIFACTS_DIR}}" &&
+            chmod -R 777 "${{env.TMP_ARTIFACTS_DIR}}" &&
+            cd "${{env.TMP_ARTIFACTS_DIR}}" &&
             upload-artifacts --user admin --password ${{secrets.ARTIFACTORY_PASSWORD}} \
                              --repository "${{env.ARTIFACT_REPO}}" --version "${{env.VERSION}}" \
                              --allow_overwrite True --files "*"
+
+            echo "Cleaning up tmp artifacts"
+            rm -rf "${{env.TMP_ARTIFACTS_DIR}}"
+            ls -la
 
       # This has to be done because of the previous step with Uploading artifacts
       # is done by root in the docker container. A ticket to not do this as root including all of our
