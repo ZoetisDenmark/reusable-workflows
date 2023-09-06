@@ -55,7 +55,7 @@ jobs:
         uses: addnab/docker-run-action@v3
         with:
           image: zoddev01:5000/vetscan-docker-base:latest
-          options: -v ${{ github.workspace }}:/home/developer -v ${{ env.build_dir }}:/home/developer/build
+          options: -v ${{ github.workspace }}:/home/developer -v ${{ env.build_dir }}:/home/developer/build --user root
           run: |
             python3 -m pip install \
               git+https://${{secrets.PAT_UNIVERSAL}}@github.com/ZoetisDenmark/vetscan-pipeline-tools#subdirectory=artifact-tools
@@ -89,7 +89,7 @@ jobs:
         with:
           owner: ZoetisDenmark
           repo: vetscan-mol
-          ref: ahe/auto-run-inttests # CLEANUP
+          ref: master
           github_token: ${{ secrets.PAT_UNIVERSAL }}
           comment_downstream_url: ${{ github.event.pull_request.comments_url }}
           workflow_file_name: integration-tests.yml
