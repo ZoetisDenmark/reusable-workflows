@@ -2,8 +2,7 @@ name: Build Yocto images and run MOL integration tests
 
 env:
   build_dir: None
-  ARTIFACT_REPO: vetscan-${{ inputs.instrument_hw }}-instrument-${{ (github.head_ref != '' && 'pull-requests') || (startsWith(github.ref_name, 'release_') && 'releases') || (github.ref_name == 'master' && 'master') || 'branches' }}
-  TMP_ARTIFACTS_DIR: tmp_artifacts
+  ARTIFACT_SPACE: vetscan-${{ inputs.instrument_hw }}-instrument-${{ (github.head_ref != '' && 'pull-requests') || (startsWith(github.ref_name, 'release_') && 'releases') || (github.ref_name == 'master' && 'master') || 'branches' }}
   ACTIONS_RUNNER_DEBUG: true
   ACTIONS_STEP_DEBUG: true
 
@@ -60,21 +59,15 @@ jobs:
             python3 -m pip install \
               git+https://${{secrets.PAT_UNIVERSAL}}@github.com/ZoetisDenmark/vetscan-pipeline-tools#subdirectory=artifact-tools
 
-            pwd
-            if [ -d "${{env.TMP_ARTIFACTS_DIR}}" ]; then rm -rf "${{env.TMP_ARTIFACTS_DIR}}"; fi
-            mkdir -p "${{env.TMP_ARTIFACTS_DIR}}"
-            chmod 777 "${{env.TMP_ARTIFACTS_DIR}}"
+            TMP_ARTIFACTS_DIR=$(mktemp -d)
+            echo "Created temporary directory: $TMP_ARTIFACTS_DIR"
 
             echo "Copying artifacts"
-            .ci/copy_artifacts.sh "${{env.TMP_ARTIFACTS_DIR}}" &&
-            chmod -R 777 "${{env.TMP_ARTIFACTS_DIR}}" &&
-            cd "${{env.TMP_ARTIFACTS_DIR}}" &&
+            .ci/copy_artifacts.sh "$TMP_ARTIFACTS_DIR" &&
+            cd "$TMP_ARTIFACTS_DIR" &&
             upload-artifacts --user admin --password ${{secrets.ARTIFACTORY_PASSWORD}} \
-                             --repository "${{env.ARTIFACT_REPO}}" --version "${{env.VERSION}}" \
+                             --repository "${{env.ARTIFACT_SPACE}}" --version "${{env.VERSION}}" \
                              --allow_overwrite True --files "*"
-
-            echo "Cleaning up tmp artifacts"
-            rm -rf "${{env.TMP_ARTIFACTS_DIR}}"
 
   trigger_integration_tests:
     name: Trigger integration tests run
@@ -93,4 +86,4 @@ jobs:
           github_token: ${{ secrets.PAT_UNIVERSAL }}
           comment_downstream_url: ${{ github.event.pull_request.comments_url }}
           workflow_file_name: integration-tests.yml
-          client_payload: '{ "repository": "${{env.ARTIFACT_REPO}}", "version": "${{env.VERSION}}", "dut-label": "${{inputs.instrument_hw}}-instrument" }'
+          client_payload: '{ "repository": "${{env.ARTIFACT_SPACE}}", "version": "${{env.VERSION}}", "dut-label": "${{inputs.instrument_hw}}-instrument" }'
