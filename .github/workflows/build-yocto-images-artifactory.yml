@@ -1,0 +1,89 @@
+name: Build Yocto images and run MOL integration tests
+
+env:
+  build_dir: None
+  ARTIFACT_SPACE: vetscan-${{ inputs.instrument_hw }}-instrument-${{ (github.head_ref != '' && 'pull-requests') || (startsWith(github.ref_name, 'release_') && 'releases') || (github.ref_name == 'master' && 'master') || 'branches' }}
+  ACTIONS_RUNNER_DEBUG: true
+  ACTIONS_STEP_DEBUG: true
+
+on:
+  workflow_call:
+    inputs:
+      instrument_type:
+        required: true
+        type: string
+        description: The instrument e.g ltf, mol
+      instrument_hw:
+        required: true
+        type: string
+        description: The instrument hardware e.g ltf, mol
+      target_list:
+        required: true
+        type: string
+        description: The list of Yocto targets to build
+      build_dir:
+        required: false
+        default: 'build'
+        type: string
+        description: The build directory to use in Yocto builds
+
+jobs:
+  build_image:
+    name: Build Yocto image
+
+    defaults:
+      run:
+        shell: bash
+
+    runs-on: [Yocto, self-hosted]
+    outputs:
+      VERSION: ${{ env.VERSION }}
+    steps:
+      - uses: webfactory/ssh-agent@v0.7.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_KEY }}
+      - uses: actions/checkout@v3
+      - run: git submodule init && git submodule update --recursive
+      - run: |
+          build_dir_name="$(echo ${{ inputs.instrument_type }}-$GITHUB_REF_NAME | tr '/-' '_')"
+          ./meta-zoetis/scripts/dev_setup.py --hw ${{ inputs.instrument_hw }} ${{ inputs.instrument_type }} --build-dir $build_dir_name --skip-latest-meta-zoetis-tag-check >> "$GITHUB_ENV"
+      - run: TARGETS="${{ inputs.target_list }}" $build_dir/run_build.sh
+      - run: echo "images_dir=$build_dir/tmp/deploy/images" >> "$GITHUB_ENV"
+      - run: echo "VERSION=$(python3 meta-zoetis/scripts/get_version_string.py)" >> $GITHUB_ENV
+      - name: Uploading artifacts
+        uses: addnab/docker-run-action@v3
+        with:
+          image: zoddev01:5000/vetscan-docker-base:latest
+          options: -v ${{ github.workspace }}:/home/developer -v ${{ env.build_dir }}:/home/developer/build --user root
+          run: |
+            python3 -m pip install \
+              git+https://${{secrets.PAT_GITHUB}}@github.com/ZoetisDenmark/vetscan-pipeline-tools#subdirectory=artifact-tools
+
+            TMP_ARTIFACTS_DIR=$(mktemp -d)
+            echo "Created temporary directory: $TMP_ARTIFACTS_DIR"
+
+            echo "Copying artifacts"
+            .ci/copy_artifacts.sh "$TMP_ARTIFACTS_DIR" &&
+            cd "$TMP_ARTIFACTS_DIR" &&
+            upload-artifacts --user admin --password ${{secrets.ARTIFACTORY_PASSWORD}} \
+                             --repository "${{env.ARTIFACT_SPACE}}" --version "${{env.VERSION}}" \
+                             --allow_overwrite True --files "*"
+
+  trigger_integration_tests:
+    name: Trigger integration tests run
+    runs-on: [Yocto, self-hosted]
+    needs: [build_image]
+    env:
+      VERSION: ${{ needs.build_image.outputs.VERSION }}
+    steps:
+      - uses: actions/checkout@v3
+      - name: Running integration tests
+        uses: convictional/trigger-workflow-and-wait@v1.6.5
+        with:
+          owner: ZoetisDenmark
+          repo: vetscan-mol
+          ref: master
+          github_token: ${{ secrets.PAT_GITHUB }}
+          comment_downstream_url: ${{ github.event.pull_request.comments_url }}
+          workflow_file_name: integration-tests.yml
+          client_payload: '{ "repository": "${{env.ARTIFACT_SPACE}}", "version": "${{env.VERSION}}", "dut-label": "${{inputs.instrument_hw}}-instrument" }'
