@@ -57,7 +57,7 @@ jobs:
           options: -v ${{ github.workspace }}:/home/developer -v ${{ env.build_dir }}:/home/developer/build --user root
           run: |
             python3 -m pip install \
-              git+https://${{secrets.PAT_UNIVERSAL}}@github.com/ZoetisDenmark/vetscan-pipeline-tools#subdirectory=artifact-tools
+              git+https://${{secrets.PAT_GITHUB}}@github.com/ZoetisDenmark/vetscan-pipeline-tools#subdirectory=artifact-tools
 
             TMP_ARTIFACTS_DIR=$(mktemp -d)
             echo "Created temporary directory: $TMP_ARTIFACTS_DIR"
@@ -83,7 +83,7 @@ jobs:
           owner: ZoetisDenmark
           repo: vetscan-mol
           ref: master
-          github_token: ${{ secrets.PAT_UNIVERSAL }}
+          github_token: ${{ secrets.PAT_GITHUB }}
           comment_downstream_url: ${{ github.event.pull_request.comments_url }}
           workflow_file_name: integration-tests.yml
           client_payload: '{ "repository": "${{env.ARTIFACT_SPACE}}", "version": "${{env.VERSION}}", "dut-label": "${{inputs.instrument_hw}}-instrument" }'
