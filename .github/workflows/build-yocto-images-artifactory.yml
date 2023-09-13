@@ -2,7 +2,7 @@ name: Build Yocto images and run MOL integration tests
 
 env:
   build_dir: None
-  ARTIFACT_SPACE: vetscan-${{ inputs.instrument_hw }}-instrument-${{ (github.head_ref != '' && 'pull-requests') || (startsWith(github.ref_name, 'release_') && 'releases') || (github.ref_name == 'master' && 'master') || 'branches' }}
+  ARTIFACT_REPO: vetscan-${{ inputs.instrument_hw }}-instrument-${{ (github.head_ref != '' && 'pull-requests') || (startsWith(github.ref_name, 'release_') && 'releases') || (github.ref_name == 'master' && 'master') || 'branches' }}
   ACTIONS_RUNNER_DEBUG: true
   ACTIONS_STEP_DEBUG: true
 
@@ -66,8 +66,42 @@ jobs:
             .ci/copy_artifacts.sh "$TMP_ARTIFACTS_DIR" &&
             cd "$TMP_ARTIFACTS_DIR" &&
             upload-artifacts --user admin --password ${{secrets.ARTIFACTORY_PASSWORD}} \
-                             --repository "${{env.ARTIFACT_SPACE}}" --version "${{env.VERSION}}" \
+                             --repository "${{env.ARTIFACT_REPO}}" --version "${{env.VERSION}}" \
                              --allow_overwrite True --files "*"
+
+  AddArtifactoryUrlComment:
+    # Only running if it's a PR event
+    if: github.head_ref != ''
+    name: Commenting artifact URL on PR
+    runs-on: vetscan-docker
+    needs: [build_image]
+    env:
+      VERSION: ${{ needs.build_image.outputs.VERSION }}
+    steps:
+      - name: Creating artifacts URL
+        run: |
+          echo ARTIFACTS_URL_STRING="Artifacts can be found in Artifactory at: ${{vars.ARTIFACTORY_URL}}/${{env.ARTIFACT_REPO}}/${{env.VERSION}}" >> $GITHUB_ENV
+      - name: Find Comment
+        uses: peter-evans/find-comment@v2
+        id: fc
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          comment-author: 'github-actions[bot]'
+          body-includes: Artifacts can be found in Artifactory at
+
+      - name: Create comment if no artifact url exists
+        if: steps.fc.outputs.comment-id == ''
+        uses: peter-evans/create-or-update-comment@v3
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          body: ${{env.ARTIFACTS_URL_STRING}}
+      - name: Update artifact URL
+        if: steps.fc.outputs.comment-id != ''
+        uses: peter-evans/create-or-update-comment@v3
+        with:
+          comment-id: ${{ steps.fc.outputs.comment-id }}
+          body: ${{env.ARTIFACTS_URL_STRING}}
+          edit-mode: replace
 
   trigger_integration_tests:
     name: Trigger integration tests run
@@ -86,4 +120,4 @@ jobs:
           github_token: ${{ secrets.PAT_GITHUB }}
           comment_downstream_url: ${{ github.event.pull_request.comments_url }}
           workflow_file_name: integration-tests.yml
-          client_payload: '{ "repository": "${{env.ARTIFACT_SPACE}}", "version": "${{env.VERSION}}", "dut-label": "${{inputs.instrument_hw}}-instrument" }'
+          client_payload: '{ "repository": "${{env.ARTIFACT_REPO}}", "version": "${{env.VERSION}}", "dut-label": "${{inputs.instrument_hw}}-instrument" }'
