@@ -59,6 +59,10 @@ jobs:
             python3 -m pip install \
               git+https://${{secrets.PAT_GITHUB}}@github.com/ZoetisDenmark/vetscan-pipeline-tools#subdirectory=artifact-tools
 
+            echo "Deleting previous artifacts"
+            delete-artifacts --user admin --password ${{secrets.ARTIFACTORY_PASSWORD}} \
+                            --repository "${{env.ARTIFACT_REPO}}" --version "${{env.VERSION}}" 
+
             TMP_ARTIFACTS_DIR=$(mktemp -d)
             echo "Created temporary directory: $TMP_ARTIFACTS_DIR"
 
